@@ -2,8 +2,6 @@
 
 pragma solidity >=0.6.0 <=0.8.0;
 
-import "hardhat/console.sol";
-
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/GSN/Context.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -140,10 +138,8 @@ contract PulseSale is Context, ReentrancyGuard, Ownable, Pausable{
         _processPurchase(beneficiary, tokens);
         emit TokensPurchased(_msgSender(), beneficiary, weiAmount, tokens);
 
-        _updatePurchasingState(beneficiary, weiAmount);
 
         _forwardFunds();
-        _postValidatePurchase(beneficiary, weiAmount);
     }
 
     function claimTokens() public nonReentrant whenNotPaused {
@@ -171,15 +167,6 @@ contract PulseSale is Context, ReentrancyGuard, Ownable, Pausable{
         this; // silence state mutability warning without generating bytecode - see https://github.com/ethereum/solidity/issues/2691
     }
 
-    /**
-     * @dev Validation of an executed purchase. Observe state and use revert statements to undo rollback when valid
-     * conditions are not met.
-     * @param beneficiary Address performing the token purchase
-     * @param weiAmount Value in wei involved in the purchase
-     */
-    function _postValidatePurchase(address beneficiary, uint256 weiAmount) internal view {
-        // solhint-disable-previous-line no-empty-blocks
-    }
 
     /**
      * @dev Source of tokens. Override this method to modify the way in which the crowdsale ultimately gets and sends
@@ -200,16 +187,6 @@ contract PulseSale is Context, ReentrancyGuard, Ownable, Pausable{
     function _processPurchase(address beneficiary, uint256 tokenAmount) internal {
         //add this to the balances array:
         _balances[beneficiary] = _balances[beneficiary].add(tokenAmount);
-    }
-
-    /**
-     * @dev Override for extensions that require an internal state to check for validity (current user contributions,
-     * etc.)
-     * @param beneficiary Address receiving the tokens
-     * @param weiAmount Value in wei involved in the purchase
-     */
-    function _updatePurchasingState(address beneficiary, uint256 weiAmount) internal {
-        // solhint-disable-previous-line no-empty-blocks
     }
 
 

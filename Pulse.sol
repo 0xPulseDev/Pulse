@@ -2,8 +2,6 @@
 
 pragma solidity >=0.6.0 <0.8.0;
 
-import "hardhat/console.sol";
-
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 
@@ -31,7 +29,7 @@ contract Pulse is ERC20, Ownable {
     event feeReceiverChanged(address Receiver);
     event UpdatedFeelessAddress(address Address, bool Taxable);
 
-    constructor (uint32 _initFee, uint32 _initDivisor, address _initFeeReceiver) public payable ERC20("PULSEDEFI.LTD", "PULSE") {
+    constructor (uint32 _initFee, uint32 _initDivisor, address _initFeeReceiver) public ERC20("PULSEDEFI.LTD", "PULSE") {
         _mint(msg.sender, 1000000000000000000000000); // 1 million
 
         // set initial state variables

@@ -13,14 +13,11 @@
 
 pragma solidity >=0.6.0 <=0.8.0;
 
-import "hardhat/console.sol";
-
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/GSN/Context.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-
 
 contract PulseStake is Ownable, ReentrancyGuard {
     using SafeMath for uint256;
@@ -94,7 +91,7 @@ contract PulseStake is Ownable, ReentrancyGuard {
 
     function stake(uint256 _amount, uint256 _stakeBracket) internal {
         require(stakes[_msgSender()][_stakeBracket].payday == 0, "PulseStake: User already staked for this bracket!");
-        require(_amount > 1e18, "PulseStake: Minimum of 1 token to stake!");
+        require(_amount >= 1e18, "PulseStake: Minimum of 1 token to stake!");
         require(!Staked[_msgSender()], "PulseStake: User is already stake in a pool!");
         
         // calculate reward
@@ -169,11 +166,10 @@ contract PulseStake is Ownable, ReentrancyGuard {
 
     function calculateReward(uint256 _amount, uint256 _stakeBracket) public view returns (uint256) {
         require(_amount > 1e18 && _stakeBracket >=0 && _stakeBracket <= 4, "PulseStake: Incorrect parameter entry!");
-        uint256 multiplier = stakeReward[_stakeBracket];
 
         // amount required to be 1e18, when percentage divisor < multiplier
         // no error will ocur
-        return (_amount.mul(multiplier)).div(percentageDivisor);
+        return (_amount.mul(stakeReward[_stakeBracket])).div(percentageDivisor);
     }
 
     /* ===== Public View Functions ===== */
@@ -194,18 +190,10 @@ contract PulseStake is Ownable, ReentrancyGuard {
     * NOTE: this will not allow the owner to withdraw reward allocation
     */
     function reclaimPulse(uint256 _amount) public onlyOwner {
-        require(_amount < Pulse.balanceOf(address(this)).sub(totalOwedValue()), "PulseStake: Attempting to withdraw too many tokens!");
+        require(_amount <= Pulse.balanceOf(address(this)).sub(totalOwedValue()), "PulseStake: Attempting to withdraw too many tokens!");
         Pulse.transfer(_msgSender(), _amount);
     }
 
-    /* 
-    * Allows the owner to withdraw any ETH accidentally sent to the contract
-    * Leaves at least 0.001 ETH in the contract, reverts if ETH balance is not greater than 0.001
-    */
-    function withdrawETH() public onlyOwner {
-        uint256 amount = address(this).balance.sub(1e15);
-        _msgSender().transfer(amount);
-    }
 
     /* 
     * Allows the owner to change the return rate for a given bracket
@@ -213,7 +201,7 @@ contract PulseStake is Ownable, ReentrancyGuard {
     * Will not affect the currently staked amounts.
     */
     function changeReturnRateForBracket(uint256 _percentage, uint256 _stakeBracket) public onlyOwner {
-        
+        require(_stakeBracket <= 4);
         // TAKE NOTE OF FORMATTING:
         // stakeReward[0] = 25;
         // stakeReward[1] = 55;
